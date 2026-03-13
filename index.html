@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>제주 학원 — LocalBoost</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Noto+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1c1c1a;--stone:#f0f4f8;--sand:#dde6ef;--blue:#1a5fa8;--navy:#0d3b6e;--muted:#7a8a9a;--white:#fdfcfa;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--stone);color:var(--ink);font-family:'Noto Sans KR',sans-serif;}
+.site-header{position:sticky;top:0;z-index:100;background:rgba(240,244,248,0.96);backdrop-filter:blur(16px);border-bottom:1px solid var(--sand);padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Cormorant Garamond',serif;font-size:21px;color:var(--ink);text-decoration:none;}
+.logo span{color:var(--blue);font-style:italic;}
+.hero{padding:32px 20px 24px;text-align:center;background:linear-gradient(160deg,var(--white) 0%,var(--stone) 100%);}
+.hero-eyebrow{font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:var(--blue);margin-bottom:8px;}
+.hero-title{font-family:'Cormorant Garamond',serif;font-size:clamp(24px,6vw,40px);line-height:1.2;margin-bottom:8px;}
+.hero-title em{color:var(--blue);font-style:italic;}
+.hero-sub{font-size:13px;color:var(--muted);}
+.loading{text-align:center;padding:60px 20px;color:var(--muted);}
+.spinner{width:36px;height:36px;border:3px solid var(--sand);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.search-panel{background:var(--white);margin:16px;border-radius:20px;padding:20px;border:1px solid var(--sand);box-shadow:0 4px 20px rgba(0,0,0,0.05);}
+.panel-label{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.panel-section{margin-bottom:16px;}
+.search-input{width:100%;padding:11px 16px;border-radius:12px;border:1.5px solid var(--sand);background:var(--stone);font-family:'Noto Sans KR',sans-serif;font-size:14px;outline:none;color:var(--ink);}
+.search-input:focus{border-color:var(--blue);}
+.chips{display:flex;gap:7px;flex-wrap:wrap;}
+.chip{padding:7px 14px;border-radius:100px;border:1.5px solid var(--sand);background:var(--stone);font-size:12px;color:var(--ink);cursor:pointer;transition:all .2s;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;}
+.chip:hover{border-color:var(--blue);color:var(--blue);}
+.chip.on{background:var(--navy);border-color:var(--navy);color:var(--white);}
+.search-btn{width:100%;padding:13px;background:var(--blue);color:var(--white);border:none;border-radius:14px;font-size:15px;font-weight:600;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:all .2s;margin-top:2px;}
+.search-btn:hover{background:var(--navy);}
+.search-btn:active{transform:scale(.98);}
+.result-bar{display:none;align-items:center;justify-content:space-between;padding:6px 16px 12px;}
+.result-title{font-family:'Cormorant Garamond',serif;font-size:20px;}
+.result-count{font-size:12px;color:var(--muted);background:var(--sand);padding:3px 12px;border-radius:20px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;padding:0 16px 110px;}
+.card{background:var(--white);border-radius:16px;border:1px solid var(--sand);cursor:pointer;transition:all .22s;overflow:hidden;}
+.card:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,0.08);border-color:transparent;}
+.card-top{padding:16px 16px 12px;}
+.card-tags{display:flex;gap:5px;margin-bottom:9px;flex-wrap:wrap;}
+.tag{font-size:10px;padding:3px 9px;border-radius:100px;font-weight:600;}
+.tag-국제{background:#e8f0fb;color:#1a5fa8;}
+.tag-영어{background:#e8fbf0;color:#1aa85f;}
+.tag-수학{background:#fce8e8;color:#a81a1a;}
+.tag-과학{background:#e8f8fb;color:#1a8aa8;}
+.tag-국어{background:#f0e8fb;color:#5f1aa8;}
+.tag-예능{background:#fdf0e8;color:#a85f1a;}
+.tag-area{background:var(--stone);color:var(--muted);border:1px solid var(--sand);}
+.card-name{font-size:14px;font-weight:600;line-height:1.4;margin-bottom:4px;}
+.card-course{font-size:11px;color:var(--muted);line-height:1.5;}
+.card-bottom{padding:9px 16px;border-top:1px solid var(--stone);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.card-addr{font-size:11px;color:var(--muted);flex:1;line-height:1.4;}
+.card-tel{font-size:11px;color:var(--blue);white-space:nowrap;font-weight:500;}
+.empty{text-align:center;padding:60px 20px;color:var(--muted);grid-column:1/-1;}
+
+/* 오버레이 */
+.overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:300;background:var(--white);transform:translateX(100%);transition:transform .32s cubic-bezier(.4,0,.2,1);overflow-y:auto;}
+.overlay.open{transform:translateX(0);}
+.ov-nav{position:sticky;top:0;z-index:10;background:rgba(253,252,250,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--sand);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;}
+.back-btn{background:none;border:none;cursor:pointer;font-size:14px;color:var(--ink);font-family:'Noto Sans KR',sans-serif;}
+.d-header{padding:24px 20px 20px;background:linear-gradient(135deg,var(--navy),var(--blue));}
+.d-tags{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
+.d-tag{font-size:10px;padding:3px 10px;border-radius:100px;background:rgba(255,255,255,.2);color:white;font-weight:600;}
+.d-name{font-family:'Cormorant Garamond',serif;font-size:26px;color:white;line-height:1.25;margin-bottom:4px;}
+.d-sub{font-size:11px;color:rgba(255,255,255,.65);}
+.d-body{padding:20px 20px 40px;max-width:680px;}
+.info-row{display:flex;gap:10px;margin-bottom:11px;align-items:flex-start;}
+.info-icon{font-size:15px;flex-shrink:0;margin-top:1px;}
+.info-text{font-size:13px;line-height:1.65;}
+.info-text a{color:var(--blue);text-decoration:none;}
+.sec-label{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px;font-weight:600;}
+.course-box{background:var(--stone);border-radius:12px;padding:13px;font-size:12px;line-height:1.9;}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:9px 16px;border-radius:100px;font-size:13px;font-weight:500;font-family:'Noto Sans KR',sans-serif;cursor:pointer;text-decoration:none;border:none;transition:all .2s;}
+.btn-call{background:var(--blue);color:white;}
+.btn-naver{background:#03C75A;color:white;}
+.btn-kakao{background:#FEE500;color:#391B1B;}
+.btn-msg{background:var(--ink);color:white;}
+.msg-form{display:none;margin-top:14px;background:var(--stone);border-radius:14px;padding:16px;}
+.msg-form input,.msg-form textarea{width:100%;padding:10px 14px;border-radius:10px;border:1.5px solid var(--sand);background:var(--white);font-family:'Noto Sans KR',sans-serif;font-size:13px;margin-bottom:8px;outline:none;}
+.msg-form textarea{resize:none;}
+.msg-send{width:100%;padding:12px;background:var(--blue);color:white;border:none;border-radius:10px;font-size:14px;font-weight:600;font-family:'Noto Sans KR',sans-serif;cursor:pointer;}
+.divider{height:1px;background:var(--sand);margin:18px 0;}
+.d-map{width:100%;height:260px;border-radius:14px;border:none;box-shadow:0 4px 16px rgba(0,0,0,.08);display:block;}
+.map-ext{display:block;text-align:center;margin-top:10px;font-size:12px;color:var(--blue);text-decoration:none;}
+
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(253,252,250,.97);backdrop-filter:blur(12px);border-top:1px solid var(--sand);display:flex;justify-content:space-around;padding:10px 0 16px;}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;font-size:11px;color:var(--muted);font-family:'Noto Sans KR',sans-serif;}
+.nav-btn.active{color:var(--blue);}
+.nav-icon{font-size:20px;}
+@media(max-width:600px){
+  .grid{grid-template-columns:1fr;gap:9px;padding:0 12px 110px;}
+  .search-panel{margin:12px;padding:16px;}
+}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <a href="index.html" class="logo">Jeju <span>Academy</span></a>
+  <span style="font-size:11px;color:var(--muted)">제주시 학원 안내</span>
+</header>
+
+<section class="hero">
+  <div class="hero-eyebrow">Jeju Academy Guide</div>
+  <h1 class="hero-title"><em>제주시 학원</em>을 찾아드립니다</h1>
+  <p class="hero-sub" id="h-sub">데이터 로딩 중...</p>
+</section>
+
+<div class="loading" id="loading"><div class="spinner"></div><p>데이터 불러오는 중...</p></div>
+
+<div id="main-content" style="display:none;">
+  <div class="search-panel">
+    <div class="panel-section">
+      <div class="panel-label">학원명 검색</div>
+      <input class="search-input" id="kw" type="text" placeholder="학원명 입력..." onkeydown="if(event.key==='Enter')doSearch()">
+    </div>
+    <div class="panel-section">
+      <div class="panel-label">지 역</div>
+      <div class="chips" id="area-chips">
+        <button class="chip on" data-v="all" onclick="pick(this,'area')">전체</button>
+        <button class="chip" data-v="노형동" onclick="pick(this,'area')">노형동</button>
+        <button class="chip" data-v="연동" onclick="pick(this,'area')">연동</button>
+        <button class="chip" data-v="이도동" onclick="pick(this,'area')">이도동</button>
+        <button class="chip" data-v="아라동" onclick="pick(this,'area')">아라동</button>
+        <button class="chip" data-v="외도동" onclick="pick(this,'area')">외도동</button>
+        <button class="chip" data-v="화북·삼화지구" onclick="pick(this,'area')">화북·삼화지구</button>
+        <button class="chip" data-v="기타" onclick="pick(this,'area')">기타</button>
+      </div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-label">과 목</div>
+      <div class="chips" id="subj-chips">
+        <button class="chip on" data-v="all" onclick="pick(this,'subj')">전체</button>
+        <button class="chip" data-v="국제학교·관리형" onclick="pick(this,'subj')">🌏 국제학교·관리형</button>
+        <button class="chip" data-v="영어" onclick="pick(this,'subj')">🗣 영어</button>
+        <button class="chip" data-v="수학" onclick="pick(this,'subj')">📐 수학</button>
+        <button class="chip" data-v="과학" onclick="pick(this,'subj')">🔬 과학</button>
+        <button class="chip" data-v="국어" onclick="pick(this,'subj')">📝 국어</button>
+        <button class="chip" data-v="예능·기타" onclick="pick(this,'subj')">🎨 예능·기타</button>
+      </div>
+    </div>
+    <button class="search-btn" onclick="doSearch()">🔍 학원 찾기</button>
+  </div>
+
+  <div class="result-bar" id="result-bar">
+    <div class="result-title" id="result-title"></div>
+    <div class="result-count" id="result-count"></div>
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<!-- 상세 오버레이 -->
+<div class="overlay" id="overlay">
+  <div class="ov-nav">
+    <button class="back-btn" onclick="closeDetail()">← 목록으로</button>
+    <span style="font-size:10px;color:var(--muted);letter-spacing:.12em">JEJU ACADEMY</span>
+  </div>
+  <div class="d-header">
+    <div class="d-tags" id="d-tags"></div>
+    <div class="d-name" id="d-name"></div>
+    <div class="d-sub" id="d-sub"></div>
+  </div>
+  <div class="d-body">
+    <div class="info-row"><span class="info-icon">📍</span><span class="info-text" id="d-addr"></span></div>
+    <div class="info-row" id="d-tel-row"><span class="info-icon">📞</span><span class="info-text"><a id="d-tel" href="#"></a></span></div>
+    <div id="d-course-wrap">
+      <div class="sec-label">교습과정</div>
+      <div class="course-box" id="d-course"></div>
+    </div>
+    <div class="btns">
+      <a class="btn btn-call" id="btn-call" href="#">📞 전화</a>
+      <a class="btn btn-naver" id="btn-naver" href="#" target="_blank">🔍 네이버 지도</a>
+      <a class="btn btn-kakao" id="btn-kakao" href="#" target="_blank">💬 카카오맵</a>
+      <button class="btn btn-msg" onclick="toggleMsg()">✉️ 문의하기</button>
+    </div>
+    <div class="msg-form" id="msg-form">
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px">수강 문의</div>
+      <input id="f-name" type="text" placeholder="이름">
+      <input id="f-phone" type="tel" placeholder="연락처">
+      <textarea id="f-msg" rows="3" placeholder="문의 내용 (희망 과목, 학년 등)"></textarea>
+      <button class="msg-send" onclick="sendMsg()">보내기</button>
+      <div id="msg-sent" style="display:none;text-align:center;padding:10px;color:var(--blue);font-size:13px;margin-top:6px">✅ 문의가 접수되었습니다!</div>
+    </div>
+    <div class="divider"></div>
+    <div class="sec-label">📍 위치</div>
+    <iframe class="d-map" id="d-map" allowfullscreen loading="lazy" title="map"></iframe>
+    <a class="map-ext" id="d-map-ext" href="#" target="_blank">🗺 구글맵에서 크게 보기</a>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <button class="nav-btn" onclick="location.href='index.html'"><span class="nav-icon">🏠</span><span>숙소</span></button>
+  <button class="nav-btn" onclick="location.href='jeju-food.html'"><span class="nav-icon">🍽</span><span>맛집</span></button>
+  <button class="nav-btn active"><span class="nav-icon">📚</span><span>학원</span></button>
+  <button class="nav-btn"><span class="nav-icon">♡</span><span>저장</span></button>
+</nav>
+
+<script>
+var SHEET_ID = '19JB-ZUfdZKpBRVcQzfAlzdXXtWOlGUF94Az2SFQ7i6k';
+var SHEET_URL = 'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&sheet=Sheet1';
+
+var TAG_CLASS = {'국제학교·관리형':'tag-국제','영어':'tag-영어','수학':'tag-수학','과학':'tag-과학','국어':'tag-국어','예능·기타':'tag-예능'};
+var TAG_ICON  = {'국제학교·관리형':'🌏','영어':'🗣','수학':'📐','과학':'🔬','국어':'📝','예능·기타':'🎨'};
+
+var academies=[], filtered=[], selArea='all', selSubj='all';
+
+function parseCSVLine(l){
+  var res=[],cur='',inQ=false;
+  for(var i=0;i<l.length;i++){
+    var c=l[i];
+    if(c==='"'){inQ=!inQ;}
+    else if(c===','&&!inQ){res.push(cur);cur='';}
+    else cur+=c;
+  }
+  res.push(cur);
+  return res;
+}
+function parseCSV(txt){
+  var lines=txt.trim().split('\n');
+  var hdrs=parseCSVLine(lines[0]).map(function(h){return h.trim().replace(/^"|"$/g,'');});
+  var out=[];
+  for(var i=1;i<lines.length;i++){
+    if(!lines[i].trim())continue;
+    var v=parseCSVLine(lines[i]),o={};
+    for(var j=0;j<hdrs.length;j++) o[hdrs[j]]=(v[j]||'').trim().replace(/^"|"$/g,'');
+    out.push(o);
+  }
+  return out;
+}
+
+function loadData(){
+  fetch(SHEET_URL)
+    .then(function(r){if(!r.ok)throw new Error(r.status);return r.text();})
+    .then(function(txt){
+      var rows=parseCSV(txt);
+      academies=[];
+      for(var i=0;i<rows.length;i++){
+        var r=rows[i];
+        if(r['노출여부']&&r['노출여부'].toUpperCase()==='N')continue;
+        if(!r['학원명']||!r['학원명'].trim())continue;
+        academies.push({
+          id:parseInt(r['id'])||(i+1),
+          name:r['학원명'],gubun:r['구분']||'',
+          area:r['지역']||'기타',subj:r['과목']||'예능·기타',
+          course:r['교습과정']||'',addr:r['주소']||'',tel:r['전화']||''
+        });
+      }
+      document.getElementById('loading').style.display='none';
+      document.getElementById('main-content').style.display='block';
+      document.getElementById('h-sub').textContent='제주시 학원·교습소 '+academies.length+'곳 정보 제공';
+      // 처음에 전체 보여주기
+      filtered=academies.slice();
+      renderCards();
+      document.getElementById('result-bar').style.display='flex';
+      document.getElementById('result-title').textContent='전체';
+      document.getElementById('result-count').textContent=academies.length+'개';
+    })
+    .catch(function(e){
+      document.getElementById('loading').innerHTML='<p style="color:#c00;padding:20px">데이터 로드 실패 ('+e.message+')<br>구글 시트 공개 설정을 확인해주세요.</p>';
+    });
+}
+
+function pick(el,type){
+  var gid=type==='area'?'area-chips':'subj-chips';
+  document.querySelectorAll('#'+gid+' .chip').forEach(function(c){c.classList.remove('on');});
+  el.classList.add('on');
+  if(type==='area') selArea=el.getAttribute('data-v');
+  else selSubj=el.getAttribute('data-v');
+}
+
+function doSearch(){
+  var kw=document.getElementById('kw').value.trim().toLowerCase();
+  filtered=academies;
+  if(selArea!=='all') filtered=filtered.filter(function(a){return a.area===selArea;});
+  if(selSubj!=='all') filtered=filtered.filter(function(a){return a.subj===selSubj;});
+  if(kw) filtered=filtered.filter(function(a){return a.name.toLowerCase().includes(kw)||a.course.toLowerCase().includes(kw);});
+  var bar=document.getElementById('result-bar');
+  bar.style.display='flex';
+  var lbl=[selArea==='all'?'':selArea,selSubj==='all'?'':selSubj].filter(Boolean).join(' ')||'전체';
+  document.getElementById('result-title').textContent=lbl+(kw?' "'+kw+'"':'');
+  document.getElementById('result-count').textContent=filtered.length+'개';
+  renderCards();
+  bar.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function renderCards(){
+  var grid=document.getElementById('grid');
+  grid.innerHTML='';
+  if(!filtered.length){
+    grid.innerHTML='<div class="empty"><div style="font-size:48px;margin-bottom:12px">📚</div><p>해당 조건의 학원이 없어요</p></div>';
+    return;
+  }
+  filtered.forEach(function(a){
+    var card=document.createElement('div');
+    card.className='card';
+    card.onclick=function(){openDetail(a.id);};
+    var ic=TAG_ICON[a.subj]||'📌';
+    var tc=TAG_CLASS[a.subj]||'tag-예능';
+    card.innerHTML=
+      '<div class="card-top">'
+        +'<div class="card-tags">'
+          +'<span class="tag '+tc+'">'+ic+' '+a.subj+'</span>'
+          +'<span class="tag tag-area">📍'+a.area+'</span>'
+        +'</div>'
+        +'<div class="card-name">'+a.name+'</div>'
+        +(a.course?'<div class="card-course">'+a.course+'</div>':'')
+      +'</div>'
+      +'<div class="card-bottom">'
+        +'<div class="card-addr">'+a.addr+'</div>'
+        +(a.tel?'<div class="card-tel">'+a.tel+'</div>':'')
+      +'</div>';
+    grid.appendChild(card);
+  });
+}
+
+function openDetail(id){
+  var a=academies.find(function(x){return x.id===id;});
+  var ic=TAG_ICON[a.subj]||'📌';
+  document.getElementById('d-tags').innerHTML=
+    '<span class="d-tag">'+ic+' '+a.subj+'</span>'
+    +'<span class="d-tag">📍'+a.area+'</span>'
+    +(a.gubun?'<span class="d-tag">'+a.gubun+'</span>':'');
+  document.getElementById('d-name').textContent=a.name;
+  document.getElementById('d-sub').textContent=a.area+' · '+a.gubun;
+  document.getElementById('d-addr').textContent=a.addr;
+  var telRow=document.getElementById('d-tel-row');
+  var telEl=document.getElementById('d-tel');
+  if(a.tel){telEl.textContent=a.tel;telEl.href='tel:'+a.tel;telRow.style.display='flex';}
+  else telRow.style.display='none';
+  var cw=document.getElementById('d-course-wrap');
+  if(a.course){document.getElementById('d-course').textContent=a.course;cw.style.display='block';}
+  else cw.style.display='none';
+  var callBtn=document.getElementById('btn-call');
+  if(a.tel){callBtn.href='tel:'+a.tel;callBtn.style.display='inline-flex';}
+  else callBtn.style.display='none';
+  document.getElementById('btn-naver').href='https://map.naver.com/v5/search/'+encodeURIComponent(a.addr);
+  document.getElementById('btn-kakao').href='https://map.kakao.com/?q='+encodeURIComponent(a.name+' '+a.addr);
+  var mapQ=encodeURIComponent(a.addr);
+  document.getElementById('d-map').src='https://maps.google.com/maps?q='+mapQ+'&z=16&output=embed&hl=ko';
+  document.getElementById('d-map-ext').href='https://maps.google.com/maps?q='+mapQ+'&z=16';
+  document.getElementById('msg-form').style.display='none';
+  document.getElementById('msg-sent').style.display='none';
+  ['f-name','f-phone','f-msg'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeDetail(){
+  document.getElementById('overlay').classList.remove('open');
+  document.body.style.overflow='';
+  document.getElementById('d-map').src='';
+}
+function toggleMsg(){
+  var f=document.getElementById('msg-form');
+  f.style.display=f.style.display==='none'?'block':'none';
+}
+function sendMsg(){
+  if(!document.getElementById('f-name').value||!document.getElementById('f-msg').value){alert('이름과 문의 내용을 입력해주세요.');return;}
+  document.getElementById('msg-sent').style.display='block';
+  ['f-name','f-phone','f-msg'].forEach(function(id){document.getElementById(id).value='';});
+  setTimeout(function(){document.getElementById('msg-sent').style.display='none';document.getElementById('msg-form').style.display='none';},3000);
+}
+
+loadData();
+</script>
+</body>
+</html>
